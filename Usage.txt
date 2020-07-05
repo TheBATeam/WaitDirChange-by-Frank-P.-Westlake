@@ -1,0 +1,50 @@
+Version 0.511, Copyright (C)2002 Frank P. Westlake
+Waits until a folder has changed and notifies which file was changed.
+
+WaitDirChg [options] "Folder name"
+
+[options (case not sensitive)]
+ /F            Print the full file path (default is a relative path).
+ /L            Loop until CTRL-C or CTRL-BREAK.
+ /S            Also watch subdirectories.
+ /T            Print a date and time stamp in the first two columns.
+ /FILE_NAME    Watches for changes to file names (add, del, ren)(default).
+ /DIR_NAME     Watches for changes to directory names (md, rd, ren).
+ /ATTRIBUTES   Watches for changes to file attributes.
+ /SIZE         Watches for changes to file size.
+ /LAST_WRITE   Watches for changes to file last write time.
+ /LAST_ACCESS  Watches for changes to file last access time.
+ /CREATION     Watches for changes to file creation time.
+ /SECURITY     Watches for changes to file security-descriptor.
+ /ANY          Watches for any changes in the folder.
+
+The program exits when the first change is detected and reports only that
+change, unless the /L switch is included. If the /L switch is included the
+program will return to watching the folder (some changes may be lost between
+cycles).
+
+ERRORLEVELS AND MESSAGES:
+ 0=[DATE TIME ]CHANGE_TYPE FILE        1=(Program error, message varies)
+ 2=ERROR: CTRL-C         3=ERROR: CTRL-BREAK     4=ERROR: CONSOLE CLOSED
+ 5=ERROR: LOGOFF         6=ERROR: SHUTDOWN
+CHANGE_TYPE:
+ New_File: The file was added to the directory.
+ Del_File: The file was removed from the directory.
+ Mod_File: The file was modified (time stamp or attributes).
+ Old_Name: The file was renamed and this is the old name.
+ New_Name: The file was renamed and this is the new name.
+
+SCRIPT EXAMPLE:
+  :LOOP
+  For /F "tokens=1* delims=: " %%a in ('WaitDirChg/fs %FTP_IN% 2^>^&1') Do (
+    Set Type=%%a
+    Set File=%%b
+  )
+  If "%File:~0,5%"=="ERROR" Goto :EOF
+  If "%Type%"=="Watching" Goto :LOOP
+  If "%Type%"=="New_File" ECHO.New: %File%
+  If "%Type%"=="Del_File" ECHO.Deleted: %File%
+  If "%Type%"=="Mod_File" ECHO.Modified: %File%
+  If "%Type%"=="Old_Name" ECHO.Renamed from: %File%
+  If "%Type%"=="New_Name" ECHO.Renamed to: %File%
+  GOTO :LOOP
